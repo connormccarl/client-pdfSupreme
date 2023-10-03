@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { Document, Page, pdfjs } from 'react-pdf';
 import { useNavigate } from "react-router";
+import axios from "axios";
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.js`;
 
 
@@ -10,6 +11,7 @@ const MergDrop = () => {
   const [loading2, setLoading2] = useState(false);
   const [pdfs, setPdfs] = useState([]);
   const [uploadedFileNames, setUploadedFileNames] = useState([]);
+  const [files, setFiles] = useState([]);
   const [numPages, setNumPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedPdfIndex, setSelectedPdfIndex] = useState(null);
@@ -58,6 +60,8 @@ const MergDrop = () => {
       return;
     }
 
+    setFiles(files);
+
     const promises = files.map(file => {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -65,7 +69,7 @@ const MergDrop = () => {
           const arrayBuffer = reader.result;
           const typedArray = new Uint8Array(arrayBuffer);
           const pdfData = new Blob([typedArray], { type: "application/pdf" });
-          resolve({ pdf: URL.createObjectURL(pdfData), name: file.name });
+          resolve({ pdf: URL.createObjectURL(pdfData), name: file.name, file: file });
         };
         reader.onerror = () => {
           reject(new Error("Failed to load the PDF file."));
@@ -78,6 +82,7 @@ const MergDrop = () => {
       const results = await Promise.all(promises);
       setPdfs(prevPdfs => [...prevPdfs, ...results.map(result => result.pdf)]);
       setUploadedFileNames(prevNames => [...prevNames, ...results.map(result => result.name)]);
+      //setFiles(prevFiles => [...prevFiles, ...results.map(result => result.file)]);
     } catch (error) {
       console.error(error);
       setLoading(false);
@@ -121,13 +126,53 @@ const MergDrop = () => {
     }, 0);
   };
 
-  const handleMerge = () => {
+  const handleMerge = async() => {
     setLoading2(true);
+    // CALL API: /merge-pdf
+    alert("Calling API /merge-pdf");
+    
+    /*fetch("/api/items")
+    .then(res => res.json())
+    .then(data => {
+      setApiItems(data);
+      alert("response data: " + apiItems.toString());
+    });*/
 
-    setTimeout(() => {
+   /* fetch("http://localhost:8080/api/merge-pdf")
+    .then(res => res.json())
+    .then(data => {
+      alert("Called /api/merge-pdf");
+    });*/
+
+
+    // load all files in formData object
+    /**/ const formData = new FormData();
+    files.map((file) => formData.append("file", file));
+
+    console.log("PDFs: ", pdfs);
+    console.log("Files: ", files);
+
+    for (var key of formData.entries()) {
+      console.log(key[0] + ', ' + key[1]);
+    }
+
+    axios.post('https://pdfapi-zdtz.onrender.com/merge-pdf', formData)
+    .then((response) => {
+      console.log("were here", response.data);
+    });
+
+   /*await fetch("https://pdfapi-zdtz.onrender.com/merge-pdf", requestOptions)
+      .then(response => {
+        console.log("were here");
+        console.log(response.json());
+      })
+      .then(data => console.log("data: " + data))
+      .catch(err => console.log("error: " + err.message));*/
+
+    /*setTimeout(() => {
       setLoading2(false);
       setMergeComplete(true);
-    }, 2000);
+    }, 2000); */
   };
 
   useEffect(() => {
