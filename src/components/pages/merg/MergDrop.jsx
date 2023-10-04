@@ -60,7 +60,7 @@ const MergDrop = () => {
       return;
     }
 
-    setFiles(files);
+    //setFiles(files);
 
     const promises = files.map(file => {
       return new Promise((resolve, reject) => {
@@ -69,7 +69,7 @@ const MergDrop = () => {
           const arrayBuffer = reader.result;
           const typedArray = new Uint8Array(arrayBuffer);
           const pdfData = new Blob([typedArray], { type: "application/pdf" });
-          resolve({ pdf: URL.createObjectURL(pdfData), name: file.name, file: file });
+          resolve({ pdf: URL.createObjectURL(pdfData), name: file.name, file: pdfData });
         };
         reader.onerror = () => {
           reject(new Error("Failed to load the PDF file."));
@@ -82,7 +82,7 @@ const MergDrop = () => {
       const results = await Promise.all(promises);
       setPdfs(prevPdfs => [...prevPdfs, ...results.map(result => result.pdf)]);
       setUploadedFileNames(prevNames => [...prevNames, ...results.map(result => result.name)]);
-      //setFiles(prevFiles => [...prevFiles, ...results.map(result => result.file)]);
+      setFiles(prevFiles => [...prevFiles, ...results.map(result => result.file)]);
     } catch (error) {
       console.error(error);
       setLoading(false);
