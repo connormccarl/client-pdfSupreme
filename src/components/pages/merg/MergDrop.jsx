@@ -1,23 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
-import { Document, Page, pdfjs } from 'react-pdf';
+import { Document, Page, pdfjs } from "react-pdf";
 import { useNavigate } from "react-router";
 import axios from "axios";
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.js`;
-
 
 const MergDrop = () => {
   const [loading, setLoading] = useState(false);
   const [loading2, setLoading2] = useState(false);
   const [pdfs, setPdfs] = useState([]);
   const [uploadedFileNames, setUploadedFileNames] = useState([]);
-  const [files, setFiles] = useState([]);
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [completedURL, setCompletedURL] = useState(null);
   const [numPages, setNumPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedPdfIndex, setSelectedPdfIndex] = useState(null);
   const [errorMessage, setErrorMessage] = useState({
     formatError: "",
-    sizeError: ""
+    sizeError: "",
   });
 
   const [mergeComplete, setMergeComplete] = useState(false);
@@ -34,42 +34,50 @@ const MergDrop = () => {
 
   const onDrop = async (acceptedFiles) => {
     setLoading(true);
-    const files = acceptedFiles.filter(file => file.type === "application/pdf" && file.size <= 10 * 1024 * 1024);
+    const files = acceptedFiles.filter(
+      (file) => file.type === "application/pdf" && file.size <= 10 * 1024 * 1024
+    );
 
     if (files.length === 0) {
       setLoading(false);
-      const isInvalidFormat = acceptedFiles.some(file => file.type !== "application/pdf");
-      const isSizeExceeded = acceptedFiles.some(file => file.size > 10 * 1024 * 1024);
+      const isInvalidFormat = acceptedFiles.some(
+        (file) => file.type !== "application/pdf"
+      );
+      const isSizeExceeded = acceptedFiles.some(
+        (file) => file.size > 10 * 1024 * 1024
+      );
 
       if (isInvalidFormat && isSizeExceeded) {
         setErrorMessage({
           formatError: "Error: Invalid file format. Please upload PDF files.",
-          sizeError: "Error: File size exceeds the maximum limit of 10MB."
+          sizeError: "Error: File size exceeds the maximum limit of 10MB.",
         });
       } else if (isInvalidFormat) {
         setErrorMessage({
           formatError: "Error: Invalid file format. Please upload PDF files.",
-          sizeError: ""
+          sizeError: "",
         });
       } else if (isSizeExceeded) {
         setErrorMessage({
           formatError: "",
-          sizeError: "Error: File size exceeds the maximum limit of 10MB."
+          sizeError: "Error: File size exceeds the maximum limit of 10MB.",
         });
       }
       return;
     }
 
-    //setFiles(files);
-
-    const promises = files.map(file => {
+    const promises = files.map((file) => {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => {
           const arrayBuffer = reader.result;
           const typedArray = new Uint8Array(arrayBuffer);
           const pdfData = new Blob([typedArray], { type: "application/pdf" });
-          resolve({ pdf: URL.createObjectURL(pdfData), name: file.name, file: pdfData });
+          resolve({
+            pdf: URL.createObjectURL(pdfData),
+            name: file.name,
+            file: pdfData,
+          });
         };
         reader.onerror = () => {
           reject(new Error("Failed to load the PDF file."));
@@ -80,13 +88,22 @@ const MergDrop = () => {
 
     try {
       const results = await Promise.all(promises);
-      setPdfs(prevPdfs => [...prevPdfs, ...results.map(result => result.pdf)]);
-      setUploadedFileNames(prevNames => [...prevNames, ...results.map(result => result.name)]);
-      setFiles(prevFiles => [...prevFiles, ...results.map(result => result.file)]);
+      setPdfs((prevPdfs) => [
+        ...prevPdfs,
+        ...results.map((result) => result.pdf),
+      ]);
+      setUploadedFileNames((prevNames) => [
+        ...prevNames,
+        ...results.map((result) => result.name),
+      ]);
+      setUploadedFiles((prevFiles) => [...prevFiles, ...files]);
     } catch (error) {
       console.error(error);
       setLoading(false);
-      setErrorMessage({ formatError: "", sizeError: "Error: Failed to load some PDF files. Please try again." });
+      setErrorMessage({
+        formatError: "",
+        sizeError: "Error: Failed to load some PDF files. Please try again.",
+      });
     }
 
     setLoading(false);
@@ -97,23 +114,35 @@ const MergDrop = () => {
   const handleDeleteAll = () => {
     setPdfs([]);
     setUploadedFileNames([]);
+    setUploadedFiles([]);
+    setCompletedURL(null);
   };
   const handleUploadAgain = () => {
     setPdfs([]);
     setUploadedFileNames([]);
+    setUploadedFiles([]);
+    setCompletedURL(null);
   };
   const handleDeleteFile = (index) => {
-    setPdfs(prevPdfs => {
+    setPdfs((prevPdfs) => {
       const updatedPdfs = [...prevPdfs];
       updatedPdfs.splice(index, 1);
       return updatedPdfs;
     });
 
-    setUploadedFileNames(prevNames => {
+    setUploadedFileNames((prevNames) => {
       const updatedNames = [...prevNames];
       updatedNames.splice(index, 1);
       return updatedNames;
     });
+
+    setUploadedFiles((prevUploadedFiles) => {
+      const updatedUploadedFiles = [...prevUploadedFiles];
+      updatedUploadedFiles.splice(index, 1);
+      return updatedUploadedFiles;
+    });
+
+    setCompletedURL(null);
   };
 
   const handleViewPDF = (index) => {
@@ -121,63 +150,50 @@ const MergDrop = () => {
     setCurrentPage(1);
 
     setTimeout(() => {
-      const modal = new window.bootstrap.Modal(document.getElementById('exampleModal'));
+      const modal = new window.bootstrap.Modal(
+        document.getElementById("exampleModal")
+      );
       modal.show();
     }, 0);
   };
 
-  const handleMerge = async() => {
+  const handleMerge = async () => {
     setLoading2(true);
     // CALL API: /merge-pdf
-    alert("Calling API /merge-pdf");
-    
-    /*fetch("/api/items")
-    .then(res => res.json())
-    .then(data => {
-      setApiItems(data);
-      alert("response data: " + apiItems.toString());
-    });*/
+    console.log("Calling /merge-pdf");
 
-   /* fetch("http://localhost:8080/api/merge-pdf")
-    .then(res => res.json())
-    .then(data => {
-      alert("Called /api/merge-pdf");
-    });*/
-
+    const apiURL = "https://pdfapi-zdtz.onrender.com";
 
     // load all files in formData object
-    /**/ const formData = new FormData();
-    files.map((file) => formData.append("file", file));
-
-    console.log("PDFs: ", pdfs);
-    console.log("Files: ", files);
-
-    for (var key of formData.entries()) {
-      console.log(key[0] + ', ' + key[1]);
+    const form = new FormData();
+    for (const file of uploadedFiles) {
+      form.append("files", file);
     }
 
-    axios.post('https://pdfapi-zdtz.onrender.com/merge-pdf', formData)
-    .then((response) => {
-      console.log("were here", response.data);
-    });
-
-   /*await fetch("https://pdfapi-zdtz.onrender.com/merge-pdf", requestOptions)
-      .then(response => {
-        console.log("were here");
-        console.log(response.json());
+    // make api call
+    let finishedURL = await fetch(apiURL + "/merge-pdf", {
+      method: "POST",
+      body: form,
+    })
+      .then((response) => {
+        return response.json();
       })
-      .then(data => console.log("data: " + data))
-      .catch(err => console.log("error: " + err.message));*/
+      .then((data) => {
+        return data;
+      })
+      .catch((error) => {
+        console.log(error);
+      });
 
-    /*setTimeout(() => {
-      setLoading2(false);
-      setMergeComplete(true);
-    }, 2000); */
+    // complete merge
+    setCompletedURL(finishedURL);
+    setLoading2(false);
+    setMergeComplete(true);
   };
 
   useEffect(() => {
     if (mergeComplete) {
-      navigate("/merged_pdf");
+      navigate("/merged_pdf", { state: { downloadURL: completedURL } });
     }
   });
 
@@ -197,15 +213,11 @@ const MergDrop = () => {
     <div className="container">
       <div className="drop-wrapper">
         {errorMessage.formatError && (
-          <div className="error">
-            {errorMessage.formatError}
-          </div>
+          <div className="error">{errorMessage.formatError}</div>
         )}
 
         {errorMessage.sizeError && (
-          <div className="error">
-            {errorMessage.sizeError}
-          </div>
+          <div className="error">{errorMessage.sizeError}</div>
         )}
         <div className="dropzone">
           {loading ? (
@@ -217,8 +229,11 @@ const MergDrop = () => {
               {pdfs.length > 0 ? (
                 <div className="pdf-preview" style={{ overflow: "scroll" }}>
                   {pdfs.map((pdf, index) => (
-                    <div key={index} style={{ color: "black", margin: "0 10px", }}>
-                      <Document file={pdf} >
+                    <div
+                      key={index}
+                      style={{ color: "black", margin: "0 10px" }}
+                    >
+                      <Document file={pdf}>
                         <Page
                           pageNumber={1}
                           width={60}
@@ -226,16 +241,20 @@ const MergDrop = () => {
                           renderAnnotationLayer={false}
                         />
                       </Document>
-                      <p className="uploadedFileName d-sm-none-name">{uploadedFileNames[index]}</p>
+                      <p className="uploadedFileName d-sm-none-name">
+                        {uploadedFileNames[index]}
+                      </p>
                       <div className="d-flex">
-                        <button onClick={() => handleViewPDF(index)}
+                        <button
+                          onClick={() => handleViewPDF(index)}
                           data-bs-target="#exampleModal"
                           data-bs-backdrop="static"
                           className="pdf-btn"
                         >
                           <i className="fa-solid fa-magnifying-glass-plus me-2"></i>
                         </button>
-                        <button onClick={() => handleDeleteFile(index)}
+                        <button
+                          onClick={() => handleDeleteFile(index)}
                           className="pdf-btn"
                         >
                           <i className="fa-solid fa-trash"></i>
@@ -247,7 +266,8 @@ const MergDrop = () => {
                     {loading2 ? (
                       <div className="loading-div">
                         <div className="loading loading-div d-flex justify-content-center align-items-center position-fixed top-0 start-0 w-100 h-100">
-                          Merging PDFs <div className="spinner-border ms-2"></div>
+                          Merging PDFs{" "}
+                          <div className="spinner-border ms-2"></div>
                         </div>
                       </div>
                     ) : (
@@ -256,10 +276,12 @@ const MergDrop = () => {
                           <i className="fa-solid fa-trash me-2"></i>Delete All
                         </button>
                         <button onClick={handleDeleteAll}>
-                          <i className="fa-solid fa-upload me-2"></i>Upload again
+                          <i className="fa-solid fa-upload me-2"></i>Upload
+                          again
                         </button>
                         <button onClick={handleMerge}>
-                          Merge PDFs <i className="fa-solid fa-arrow-right ms-2"></i>
+                          Merge PDFs{" "}
+                          <i className="fa-solid fa-arrow-right ms-2"></i>
                         </button>
                       </>
                     )}
@@ -271,7 +293,9 @@ const MergDrop = () => {
                   <div className="upload-button">
                     <button className="btn btn-drop">Choose File</button>
                   </div>
-                  <p className="text-center">OR <br /> drop PDFs here</p>
+                  <p className="text-center">
+                    OR <br /> drop PDFs here
+                  </p>
                 </div>
               )}
             </div>
@@ -291,12 +315,18 @@ const MergDrop = () => {
           </button>
           <ul className="dropdown-menu dropdown-menu-drop">
             <li>
-              <button className="dropdown-item dropdown-item-drop" onClick={handleUploadAgain}>
+              <button
+                className="dropdown-item dropdown-item-drop"
+                onClick={handleUploadAgain}
+              >
                 <i className="fa-solid fa-upload me-2"></i>Upload again
               </button>
             </li>
             <li>
-              <button className="dropdown-item dropdown-item-drop" onClick={handleDeleteAll}>
+              <button
+                className="dropdown-item dropdown-item-drop"
+                onClick={handleDeleteAll}
+              >
                 <i className="fa-solid fa-trash me-2"></i>Delete All
               </button>
             </li>
@@ -309,18 +339,47 @@ const MergDrop = () => {
         </div>
       </div>
       <>
-
         {/* Modal */}
         {selectedPdfIndex !== null && (
-          <div className="modal fade" id="exampleModal" tabIndex={-1} aria-labelledby="exampleModalLabel" aria-hidden="true" >
-            <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable" style={{ maxWidth: 'fit-content', backgroundColor: "tranparent" }} data-bs-config={{ backdrop: "true" }}>
-              <div className="modal-content" style={{ backgroundColor: "transparent", borderRadius: "0", border: "none" }}>
+          <div
+            className="modal fade"
+            id="exampleModal"
+            tabIndex={-1}
+            aria-labelledby="exampleModalLabel"
+            aria-hidden="true"
+          >
+            <div
+              className="modal-dialog modal-dialog-centered modal-dialog-scrollable"
+              style={{ maxWidth: "fit-content", backgroundColor: "tranparent" }}
+              data-bs-config={{ backdrop: "true" }}
+            >
+              <div
+                className="modal-content"
+                style={{
+                  backgroundColor: "transparent",
+                  borderRadius: "0",
+                  border: "none",
+                }}
+              >
                 <div className="modal-body py-0 my-0">
-                  <div className="pdf-modal-preview" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: "0" }}>
-                    <Document file={pdfs[selectedPdfIndex]} onLoadSuccess={({ numPages }) => setNumPages(numPages)}>
+                  <div
+                    className="pdf-modal-preview"
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      borderRadius: "0",
+                    }}
+                  >
+                    <Document
+                      file={pdfs[selectedPdfIndex]}
+                      onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+                    >
                       <Page
                         pageNumber={currentPage}
-                        width={window.innerWidth > 768 ? null : window.innerWidth}
+                        width={
+                          window.innerWidth > 768 ? null : window.innerWidth
+                        }
                         renderTextLayer={false}
                         renderAnnotationLayer={false}
                       />
@@ -329,9 +388,22 @@ const MergDrop = () => {
                 </div>
                 <div className="modal-footer border-0 d-flex justify-content-center align-items-center mb-0 pb-0">
                   <span className="pdf-next-pre">
-                    <button type="button" className="btn" onClick={previousPage} disabled={currentPage === 1}><i className="fa-solid fa-chevron-left"></i></button>
-                    <button type="button" className="btn" onClick={nextPage} disabled={currentPage === numPages}
-                    ><i className="fa-solid fa-chevron-right"></i></button>
+                    <button
+                      type="button"
+                      className="btn"
+                      onClick={previousPage}
+                      disabled={currentPage === 1}
+                    >
+                      <i className="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <button
+                      type="button"
+                      className="btn"
+                      onClick={nextPage}
+                      disabled={currentPage === numPages}
+                    >
+                      <i className="fa-solid fa-chevron-right"></i>
+                    </button>
                   </span>
                 </div>
               </div>
@@ -344,4 +416,3 @@ const MergDrop = () => {
 };
 
 export default MergDrop;
-
