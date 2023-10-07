@@ -118,7 +118,7 @@ const DropRotate = () => {
         setRotateby(90);
         break;
       case -1:
-        setRotateby(-90);
+        setRotateby(270);
         break;
       case 2:
         setRotateby(180);
@@ -130,7 +130,7 @@ const DropRotate = () => {
         setRotateby(270);
         break;
       case -3:
-        setRotateby(-270);
+        setRotateby(90);
         break;
     }
 
