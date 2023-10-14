@@ -16,6 +16,7 @@ const DropRotate = () => {
     sizeError: "",
   });
   const [rotateby, setRotateby] = useState(0);
+  const [rotateView, setRotateView] = useState("");
   const [uploadedFile, setUploadedFile] = useState(null);
   const [completedURL, setCompletedURL] = useState(null);
 
@@ -96,12 +97,41 @@ const DropRotate = () => {
 
   const handleRotateLeft = () => {
     setRotateby(rotateby - 90);
-    alert("PDF Rotated Left");
+
+    switch (rotateView){
+      case "":
+        setRotateView("rotate270");
+        break;
+      case "rotate90":
+        setRotateView("");
+        break;
+      case "rotate180":
+        setRotateView("rotate90");
+        break;
+      case "rotate270":
+        setRotateView("rotate180");
+        break;
+    };
+
   };
 
   const handleRotateRight = () => {
     setRotateby(rotateby + 90);
-    alert("PDF Rotated Right");
+
+    switch (rotateView){
+      case "":
+        setRotateView("rotate90");
+        break;
+      case "rotate90":
+        setRotateView("rotate180");
+        break;
+      case "rotate180":
+        setRotateView("rotate270");
+        break;
+      case "rotate270":
+        setRotateView("");
+        break;
+    };
   };
 
   const handleRotate = async () => {
@@ -192,6 +222,7 @@ const DropRotate = () => {
                   <div style={{ color: "black" }}>
                     <Document file={pdf}>
                       <Page
+                        className={rotateView}
                         pageNumber={1}
                         width={140}
                         renderTextLayer={false}
