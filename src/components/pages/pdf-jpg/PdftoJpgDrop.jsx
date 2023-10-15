@@ -145,7 +145,7 @@ const PdftoJpgDrop = () => {
         <div className="dropzone">
           {loading ? (
             <div className="loading text-white d-flex">
-              Uploading <div className="spinner-border  ms-2"></div>
+              Uploading <div className="spinner-border  ms-4"></div>
             </div>
           ) : (
             <div className="content">
@@ -167,7 +167,7 @@ const PdftoJpgDrop = () => {
                       <div className="loading-div">
                         <div className="loading loading-div d-flex justify-content-center align-items-center position-fixed top-0 start-0 w-100 h-100">
                           Converting PDF{" "}
-                          <div className="spinner-border ms-2"></div>
+                          <div className="spinner-border ms-4"></div>
                         </div>
                       </div>
                     ) : (

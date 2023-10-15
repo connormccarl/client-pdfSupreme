@@ -169,7 +169,7 @@ const MergDrop = () => {
     for (const file of uploadedFiles) {
       form.append("files", file);
     }
-
+    /*
     // make api call
     let finishedURL = await fetch(apiURL + "/merge-pdf", {
       method: "POST",
@@ -188,7 +188,7 @@ const MergDrop = () => {
     // complete merge
     setCompletedURL(finishedURL);
     setLoading2(false);
-    setMergeComplete(true);
+    setMergeComplete(true);*/
   };
 
   useEffect(() => {
@@ -222,7 +222,7 @@ const MergDrop = () => {
         <div className="dropzone">
           {loading ? (
             <div className="loading text-white d-flex">
-              Uploading <div className="spinner-border  ms-2"></div>
+              Uploading <div className="spinner-border  ms-4"></div>
             </div>
           ) : (
             <div className="content">
@@ -267,7 +267,7 @@ const MergDrop = () => {
                       <div className="loading-div">
                         <div className="loading loading-div d-flex justify-content-center align-items-center position-fixed top-0 start-0 w-100 h-100">
                           Merging PDFs{" "}
-                          <div className="spinner-border ms-2"></div>
+                          <div className="spinner-border ms-4"></div>
                         </div>
                       </div>
                     ) : (
