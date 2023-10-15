@@ -16,7 +16,7 @@ const DropRotate = () => {
     sizeError: "",
   });
   const [rotateby, setRotateby] = useState(0);
-  const [rotateView, setRotateView] = useState("");
+  const [rotateView, setRotateView] = useState("rotate");
   const [uploadedFile, setUploadedFile] = useState(null);
   const [completedURL, setCompletedURL] = useState(null);
 
@@ -99,17 +99,17 @@ const DropRotate = () => {
     setRotateby(rotateby - 90);
 
     switch (rotateView){
-      case "":
-        setRotateView("rotate270");
+      case "rotate":
+        setRotateView("rotate rotate270");
         break;
-      case "rotate90":
-        setRotateView("");
+      case "rotate rotate90":
+        setRotateView("rotate");
         break;
-      case "rotate180":
-        setRotateView("rotate90");
+      case "rotate rotate180":
+        setRotateView("rotate rotate90");
         break;
-      case "rotate270":
-        setRotateView("rotate180");
+      case "rotate rotate270":
+        setRotateView("rotate rotate180");
         break;
     };
 
@@ -119,17 +119,17 @@ const DropRotate = () => {
     setRotateby(rotateby + 90);
 
     switch (rotateView){
-      case "":
-        setRotateView("rotate90");
+      case "rotate":
+        setRotateView("rotate rotate90");
         break;
-      case "rotate90":
-        setRotateView("rotate180");
+      case "rotate rotate90":
+        setRotateView("rotate rotate180");
         break;
-      case "rotate180":
-        setRotateView("rotate270");
+      case "rotate rotate180":
+        setRotateView("rotate rotate270");
         break;
-      case "rotate270":
-        setRotateView("");
+      case "rotate rotate270":
+        setRotateView("rotate");
         break;
     };
   };

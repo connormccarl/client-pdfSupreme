@@ -3221,9 +3221,12 @@ textarea.form-control {
   text-align: center;
 }
 
+.rotate {
+  margin: 10px;
+}
+
 .rotate90 {
   transform: rotate(90deg);
-  margin-bottom: 10px;
 }
 
 .rotate180 {
@@ -3232,7 +3235,6 @@ textarea.form-control {
 
 .rotate270 {
   transform: rotate(270deg);
-  margin-bottom: 40px;
 }
 
 .loading {
