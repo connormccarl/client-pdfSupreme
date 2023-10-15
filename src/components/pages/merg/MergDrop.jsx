@@ -169,7 +169,7 @@ const MergDrop = () => {
     for (const file of uploadedFiles) {
       form.append("files", file);
     }
-    /*
+    
     // make api call
     let finishedURL = await fetch(apiURL + "/merge-pdf", {
       method: "POST",
@@ -188,7 +188,7 @@ const MergDrop = () => {
     // complete merge
     setCompletedURL(finishedURL);
     setLoading2(false);
-    setMergeComplete(true);*/
+    setMergeComplete(true);
   };
 
   useEffect(() => {
