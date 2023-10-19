@@ -200,6 +200,7 @@ const DropRotate = () => {
       navigate("/rotated_pdf", { state: { downloadURL: completedURL } });
     }
   });
+
   return (
     <div className="container">
       <div className="drop-wrapper">
